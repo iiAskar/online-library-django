@@ -119,3 +119,4 @@ AUTH_USER_MODEL = 'library.User'
 LOGIN_URL = '/login/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'media')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles_build', 'static')
