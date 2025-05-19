@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}My Dashboard - {{ user.username }}{% endblock %}
+
+{% block content %}
+<main class="dashboard-container">
+    <h1 class="dashboard-title">My Dashboard - Welcome, {{ user.username }}!</h1>
+
+    <div class="dashboard-grid">
+        <section class="dashboard-section current-borrowed-books">
+            <h2>Currently Borrowed Books</h2>
+            <div class="book-list" id="current-borrowed-books-list">
+                {% for borrowed_record in current_borrowed_books %}
+                    <div class="book-card" id="borrowed-card-{{ borrowed_record.pk }}">
+                        {% if borrowed_record.book.cover_image_file and borrowed_record.book.cover_image_file.url %}
+                            <img src="{{ borrowed_record.book.cover_image_file.url }}" alt="{{ borrowed_record.book.book_name }} cover" class="book-cover">
+                        {% else %}
+                            <img src="{% static 'images/default_cover.jpg' %}" alt="Default cover" class="book-cover">
+                        {% endif %}
+                        <div class="book-info">
+                            <h3 class="book-title">{{ borrowed_record.book.book_name }}</h3>
+                            <p class="book-author">{{ borrowed_record.book.author }}</p>
+                            <p class="book-category">
+                                {% for cat in borrowed_record.book.categories.all %}{{ cat.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                            </p>
+                            <p class="book-status">Due: <span class="due-date">{{ borrowed_record.due_date|date:"F j, Y" }}</span></p>
+                            <div class="book-actions">
+                                <a href="{% url 'library:book_detail' book_id=borrowed_record.book.book_id_json %}" class="btn details-btn">View Details</a>
+                                <button class="btn secondary-btn return-book-btn" data-borrowed-pk="{{ borrowed_record.pk }}">Return Book</button>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-message" style="text-align: center; padding: 20px;">You haven't borrowed any books yet.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="dashboard-section past-borrowed-books">
+            <h2>Previously Borrowed Books</h2>
+            <div class="book-list" id="past-borrowed-books-list">
+                {% for borrowed_record in past_borrowed_books %}
+                     <div class="book-card">
+                        {% if borrowed_record.book.cover_image_file and borrowed_record.book.cover_image_file.url %}
+                        <img src="{{ borrowed_record.book.cover_image_file.url }}" alt="{{ borrowed_record.book.book_name }} cover" class="book-cover">
+                        {% else %}
+                        <img src="{% static 'images/default_cover.jpg' %}" alt="Default cover" class="book-cover">
+                        {% endif %}
+                        <div class="book-info">
+                            <h3 class="book-title">{{ borrowed_record.book.book_name }}</h3>
+                            <p class="book-author">{{ borrowed_record.book.author }}</p>
+                            <p class="book-status">Returned: <span class="return-date">{{ borrowed_record.return_date|date:"F j, Y" }}</span></p>
+                            <div class="book-actions">
+                                <a href="{% url 'library:book_detail' book_id=borrowed_record.book.book_id_json %}" class="btn details-btn">View Details</a>
+                                {% if borrowed_record.book.is_available %}
+                                <button class="btn borrow-btn borrow-again-btn" data-book-pk="{{ borrowed_record.book.pk }}">Borrow Again</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                     <div class="empty-message" style="text-align: center; padding: 20px;">No past borrowed books to show.</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+    
+    <section class="dashboard-section available-books">
+        <h2>Available Books You Might Like</h2>
+        <div class="book-carousel">
+            {% for book_suggestion in suggested_books %}
+            <div class="book-card">
+                {% if book_suggestion.cover_image_file and book_suggestion.cover_image_file.url %}
+                    <img src="{{ book_suggestion.cover_image_file.url }}" alt="{{ book_suggestion.book_name }} cover" class="book-cover">
+                {% else %}
+                    <img src="{% static 'images/default_cover.jpg' %}" alt="Default cover" class="book-cover">
+                {% endif %}
+                <div class="book-info">
+                    <h3 class="book-title">{{ book_suggestion.book_name }}</h3>
+                    <p class="book-author">{{ book_suggestion.author }}</p>
+                    <p class="book-status available">Available</p>
+                    <div class="book-actions">
+                        <a href="{% url 'library:book_detail' book_id=book_suggestion.book_id_json %}" class="btn details-btn">View Details</a>
+                        <button class="btn borrow-btn" data-book-pk="{{ book_suggestion.pk }}">Borrow</button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="text-align: center; padding: 20px;">No specific suggestions right now. <a href="{% url 'library:book_list' %}">Browse all books</a>!</p>
+            {% endfor %}
+        </div>
+        <a href="{% url 'library:book_list' %}" class="btn view-all-btn" style="display: block; width: fit-content; margin: 1rem auto;">View All Books</a>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/books.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Listeners for "Borrow Again" and "Borrow" (from suggested books)
+    document.querySelectorAll('main.dashboard-container .borrow-btn, main.dashboard-container .borrow-again-btn').forEach(button => {
+        const newButton = button.cloneNode(true); 
+        button.parentNode.replaceChild(newButton, button);
+        newButton.addEventListener('click', function() {
+            const bookPK = this.dataset.bookPk;
+            if (this.disabled) return;
+            if (typeof handleBorrowBook === 'function' && bookPK) { // handleBorrowBook from books.js
+                handleBorrowBook(bookPK, this);
+            } else {
+                console.error("handleBorrowBook function not found or book PK missing.");
+            }
+        });
+    });
+
+    // Listeners for "Return Book" buttons
+    document.querySelectorAll('.return-book-btn').forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+        newButton.addEventListener('click', function() {
+            const borrowedPk = this.dataset.borrowedPk;
+            if (borrowedPk) {
+                handleReturnBookFromDashboard(borrowedPk, this.closest('.book-card'));
+            }
+        });
+    });
+});
+
+// Handles returning a book from the user dashboard.
+async function handleReturnBookFromDashboard(borrowedPk, cardElement) {
+    if (!confirm("Are you sure you want to return this book?")) return;
+
+    if (!window.APP_URLS?.returnBookApiBase) { 
+        alert("Configuration error: Return Book API URL not defined."); return; 
+    }
+    const returnUrl = `${window.APP_URLS.returnBookApiBase}${borrowedPk}/`;
+
+    try {
+        const response = await fetch(returnUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            alert(result.message || "Book returned successfully!");
+            if (cardElement) cardElement.remove(); 
+
+        } else {
+            alert(`Error: ${result.message || "Could not return book."}`);
+        }
+    } catch (error) {
+        console.error("Error returning book from dashboard:", error);
+        alert("A network error occurred while returning the book.");
+    }
+}
+</script>
+{% endblock %}

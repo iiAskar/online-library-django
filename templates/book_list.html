@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Book List - Online Library{% endblock %}
+
+{% block content %}
+<div class="book-list-container">
+    <section class="search-filter-section">
+        <h1>Book List</h1>
+        <div class="search-filter-container">
+            <form class="search-form" action="#" method="get"> 
+                <div class="search-inputs">
+                    <input type="text" name="search" id="search" placeholder="Search by title, author or category">
+                    <select name="search-type" id="search-type">
+                        <option value="all">All</option>
+                        <option value="title">Title</option>
+                        <option value="author">Author</option>
+                        <option value="category">Category</option>
+                    </select>
+                    <button type="submit" class="btn search-btn">Search</button>
+                </div>
+            </form>
+            
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="category-filter">Category</label>
+                    <select id="category-filter">
+                        <option value="all">All Categories</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="availability-filter">Availability</label>
+                    <select id="availability-filter">
+                        <option value="all">All</option>
+                        <option value="available">Available</option>
+                        <option value="borrowed">Borrowed</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sort-by">Sort By</label>
+                    <select id="sort-by">
+                        <option value="title-asc">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                        <option value="author-asc">Author (A-Z)</option>
+                        <option value="author-desc">Author (Z-A)</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="book-grid-section">
+        <div class="book-grid" id="bookGrid">
+            <p>Loading books...</p> 
+        </div>
+        
+        <div class="pagination" id="bookListPagination" style="display:none;"> 
+            <button class="pagination-btn prev-btn" disabled>Previous</button>
+            <div class="pagination-numbers" id="bookListPaginationNumbers"></div>
+            <button class="pagination-btn next-btn">Next</button>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/books.js' %}"></script>
+{% endblock %}

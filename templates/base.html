@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Online Library{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script>
+        // Global JavaScript variables for Django URLs and User Context
+        window.APP_URLS = {
+            signupApi: "{% url 'library:signup_api' %}",
+            loginApi: "{% url 'library:login_api' %}",
+            logoutApi: "{% url 'library:logout_api' %}",
+            loginPage: "{% url 'library:login_page' %}",
+            bookList: "{% url 'library:book_list' %}", 
+
+            index: "{% url 'library:index' %}",
+            adminDashboard: "{% url 'library:admin_dashboard' %}",
+            userDashboard: "{% url 'library:user_dashboard' %}",
+            addBookPage: "{% url 'library:add_book_page' %}",
+            
+            booksApi: "{% url 'library:books_api' %}", 
+            addBookApi: "{% url 'library:add_book_api' %}",
+
+            bookDetailBase: "/books/", 
+            editBookPageBase: "/edit-book/", 
+            updateBookApiBase: "/api/books/update/", 
+            deleteBookApiBase: "/api/books/delete/", 
+            borrowBookApiBase: "/api/books/borrow/",
+            returnBookApiBase: "/api/borrowed-books/return/",
+            allBorrowedBooksApi: "{% url 'library:all_borrowed_books_api' %}",
+        };
+        window.UserContext = {
+            isAuthenticated: {{ user.is_authenticated|yesno:"true,false,false" }},
+            isAdmin: {% if user.is_authenticated and user.is_admin %}true{% else %}false{% endif %},
+            username: "{{ user.username|escapejs }}" 
+        };
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="logo">
+                <a href="{% url 'library:index' %}">Online Library</a>
+            </div>
+            <ul class="nav-links">
+                {% if user.is_authenticated %}
+                    {% if user.is_admin %}
+                        <li><a href="{% url 'library:index' %}" {% if request.resolver_match.url_name == 'index' %}class="active"{% endif %}>Home</a></li>
+                        <li><a href="{% url 'library:add_book_page' %}" {% if request.resolver_match.url_name == 'add_book_page' %}class="active"{% endif %}>Add Book</a></li>
+                        <li><a href="{% url 'library:book_list' %}" {% if request.resolver_match.url_name == 'book_list' %}class="active"{% endif %}>Manage Books</a></li>
+                        <li><a href="{% url 'library:admin_dashboard' %}" {% if request.resolver_match.url_name == 'admin_dashboard' %}class="active"{% endif %}>Admin Dashboard</a></li>
+                    {% else %}
+                        <li><a href="{% url 'library:index' %}" {% if request.resolver_match.url_name == 'index' %}class="active"{% endif %}>Home</a></li>
+                        <li><a href="{% url 'library:book_list' %}" {% if request.resolver_match.url_name == 'book_list' %}class="active"{% endif %}>Browse Books</a></li>
+                        <li><a href="{% url 'library:user_dashboard' %}" {% if request.resolver_match.url_name == 'user_dashboard' %}class="active"{% endif %}>My Dashboard</a></li>
+                    {% endif %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle">{{ user.username }}<span class="dropdown-icon">▼</span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" id="logout-btn">Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'library:index' %}" {% if request.resolver_match.url_name == 'index' %}class="active"{% endif %}>Home</a></li>
+                    <li><a href="{% url 'library:book_list' %}" {% if request.resolver_match.url_name == 'book_list' %}class="active"{% endif %}>Browse Books</a></li>
+                    <li><a href="{% url 'library:login_page' %}" {% if request.resolver_match.url_name == 'login_page' %}class="active"{% endif %}>Login</a></li>
+                    <li><a href="{% url 'library:signup_page' %}" {% if request.resolver_match.url_name == 'signup_page' %}class="active signup-btn"{% else %}class="signup-btn"{% endif %}>Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Online Library</h3>
+                <p>Your gateway to knowledge and imagination.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="{% url 'library:index' %}">Home</a></li>
+                    {% if user.is_authenticated %}
+                        {% if user.is_admin %}
+                            <li><a href="{% url 'library:book_list' %}">Manage Books</a></li>
+                            <li><a href="{% url 'library:admin_dashboard' %}">Admin Dashboard</a></li>
+                        {% else %}
+                            <li><a href="{% url 'library:book_list' %}">Browse Books</a></li>
+                            <li><a href="{% url 'library:user_dashboard' %}">My Dashboard</a></li>
+                        {% endif %}
+                    {% else %}
+                         <li><a href="{% url 'library:book_list' %}">Browse Books</a></li>
+                         <li><a href="{% url 'library:login_page' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© {% now "Y" %} Online Library. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/auth.js' %}"></script> 
+    <script src="{% static 'js/auth-check.js' %}"></script> 
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

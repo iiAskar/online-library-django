@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Online Library{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard-container">
+    <h1 class="dashboard-title">Admin Dashboard</h1>
+
+    <section class="dashboard-stats" style="display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:2rem; justify-content:space-around;">
+        <div class="stat-card" style="flex-basis: 200px; text-align:center; padding:1rem; border:1px solid #ddd; border-radius:5px;">
+            <h3>Total Books</h3>
+            <p class="stat-number">{{ total_books_count|default:"0" }}</p>
+        </div>
+        <div class="stat-card" style="flex-basis: 200px; text-align:center; padding:1rem; border:1px solid #ddd; border-radius:5px;">
+            <h3>Total Available Copies</h3>
+            <p class="stat-number">{{ available_books_sum|default:"0" }}</p>
+        </div>
+        <div class="stat-card" style="flex-basis: 200px; text-align:center; padding:1rem; border:1px solid #ddd; border-radius:5px;">
+            <h3>Currently Borrowed</h3>
+            <p class="stat-number">{{ borrowed_books_count|default:"0" }}</p>
+        </div>
+        <div class="stat-card" style="flex-basis: 200px; text-align:center; padding:1rem; border:1px solid #ddd; border-radius:5px;">
+            <h3>Total Users</h3>
+            <p class="stat-number">{{ total_users_count|default:"0" }}</p>
+        </div>
+    </section>
+
+    <div class="dashboard-actions">
+        <a href="{% url 'library:add_book_page' %}" class="action-card">
+            <div class="action-icon"><img src="{% static 'images/bookadd.png' %}" alt="Add new book icon"></div>
+            <h3>Add New Book</h3><p>Add a new book to the library inventory.</p>
+        </a>
+        <a href="{% url 'library:book_list' %}" class="action-card"> 
+            <div class="action-icon"><img src="{% static 'images/bookmanage.png' %}" alt="Manage books icon"></div>
+            <h3>Manage All Books</h3><p>View, filter, and sort all books.</p>
+        </a>
+        <a href="#" id="view-borrowed-books-action" class="action-card"> 
+            <div class="action-icon"><img src="{% static 'images/borrowed.png' %}" alt="View borrowed books icon"></div>
+            <h3>View Borrowed Books</h3><p>See all currently borrowed books and manage returns.</p>
+        </a>
+    </div>
+    
+    <section class="book-management" id="all-books-management-section">
+        <h2>All Library Books</h2>
+        <div class="table-container">
+            <table class="book-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title & Cover</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>Total</th>
+                        <th>Avail.</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bookTableBody">
+                    <tr><td colspan="8">Loading books...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="pagination" style="margin-top:1rem; text-align:center; display:none;">
+            <button class="pagination-btn prev-btn" disabled>Previous</button>
+            <div class="pagination-numbers" id="paginationNumbers"></div>
+            <button class="pagination-btn next-btn">Next</button>
+        </div>
+    </section>
+    
+
+    <section class="book-management" id="borrowed-books-management-section" style="display:none; margin-top: 30px;">
+        <h2>Currently Borrowed Books</h2>
+        <div class="table-container">
+            <table class="book-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Book Title</th>
+                        <th>Borrow Date</th>
+                        <th>Due Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="borrowedBookTableBody">
+                    <tr><td colspan="5">Loading borrowed books...</td></tr>
+                </tbody>
+            </table>
+            <div class="btn primary-btn" id="view-all-books-action" style="margin:10px;">Return to quick Management table</div>
+        </div>
+        <div class="pagination" id="borrowedPagination" style="margin-top:1rem; text-align:center; display:none;">
+            <button class="pagination-btn prev-btn" id="borrowedPrevBtn" disabled>Previous</button>
+            <div class="pagination-numbers" id="borrowedPaginationNumbers"></div>
+            <button class="pagination-btn next-btn" id="borrowedNextBtn">Next</button>
+        </div>
+    </section>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/admin-dash.js' %}"></script> 
+{% endblock %}

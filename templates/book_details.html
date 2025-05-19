@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ book.book_name|default:"Book Details" }} - Online Library{% endblock %}
+
+{% block content %}
+<div class="book-details-container">
+    <div class="breadcrumbs">
+        <a href="{% url 'library:book_list' %}">Books</a> / 
+        <span class="current-page">{{ book.book_name|default:"Details" }}</span>
+    </div>
+    
+    {% if book %}
+    <div class="book-details">
+        <div class="book-cover-section">
+            {% if book.cover_image_file and book.cover_image_file.url %}
+            <img src="{{ book.cover_image_file.url }}" alt="{{ book.book_name }} cover" class="book-cover-large">
+            {% else %}
+            <img src="{% static 'images/default_cover.jpg' %}" alt="Default book cover" class="book-cover-large">
+            {% endif %}
+            
+            <div class="book-actions">
+                {% if user.is_authenticated %}
+                    {% if user_has_borrowed_this_book and current_borrow_record %}
+                        <p style="margin-bottom: 5px; font-weight: bold; color: var(--info-color);">You have this book borrowed.</p>
+                        <p style="margin-bottom: 10px;">Due: {{ current_borrow_record.due_date|date:"F j, Y" }}</p>
+                        <button class="btn secondary-btn return-book-btn-detail" data-borrowed-pk="{{ current_borrow_record.pk }}">Return This Book</button>
+                    {% elif book.is_available %}
+                        <button class="btn primary-btn borrow-btn" data-book-pk="{{ book.pk }}">Borrow</button>
+                    {% else %}
+                        <button class="btn primary-btn" disabled>
+                            {% if book.total_copies > 0 %}Unavailable{% else %}Out of Stock{% endif %}
+                        </button>
+                    {% endif %}
+                {% else %}
+                    {% if book.is_available %}
+                        <button class="btn primary-btn borrow-btn" data-book-pk="{{ book.pk }}">Borrow</button>
+                    {% else %}
+                        <button class="btn primary-btn" disabled>
+                             {% if book.total_copies > 0 %}Unavailable{% else %}Out of Stock{% endif %}
+                        </button>
+                    {% endif %}
+                {% endif %}
+
+                {% if user.is_authenticated and user.is_admin %}
+                    <hr style="margin: 15px 0;">
+                    <a href="{% url 'library:edit_book_page' book_pk=book.pk %}" class="btn edit-btn" style="margin-top: 0px; display: block; width: calc(100% - 0rem); margin-bottom:10px;">Edit This Book</a>
+                    <button class="btn delete-btn" id="delete-book-detail-btn" data-book-pk="{{ book.pk }}" data-book-title="{{ book.book_name|escapejs }}" style="display: block; width: calc(100% - 0rem); background-color: var(--danger-color);">Delete This Book</button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="book-info-section">
+            <h1 class="book-title">{{ book.book_name }}</h1>
+            <div class="book-meta">
+                <p class="book-author">by <span>{{ book.author }}</span></p>
+                <p class="book-id">ID: <span>{{ book.book_id_json|default:"N/A" }}</span></p>
+                <p>ISBN: <span>{{ book.isbn|default:"N/A" }}</span></p>
+            </div>
+            
+            <div class="book-status-section">
+                <div class="status-badge {% if user_has_borrowed_this_book %}borrowed-by-you{% elif book.is_available %}available{% else %}borrowed{% endif %}">
+                    {% if user_has_borrowed_this_book %}Borrowed by You
+                    {% elif book.is_available %}Available
+                    {% else %}Unavailable
+                    {% endif %}
+                </div>
+                <p class="copies-info">{{ book.available_copies }} of {{ book.total_copies }} copies available</p>
+            </div>
+            
+            <div class="book-categories">
+                {% for category in book.categories.all %}<span class="category-tag">{{ category.name }}</span>{% empty %}<span class="category-tag">Uncategorized</span>{% endfor %}
+            </div>
+            
+            <div class="book-description">
+                <h2>Description</h2>
+                {{ book.description|linebreaksbr|default:"No description available." }}
+            </div>
+            
+            <div class="book-details-table">
+                <h2>Book Details</h2>
+                <table>
+                    {% if book.publisher %}<tr><th>Publisher</th><td>{{ book.publisher }}</td></tr>{% endif %}
+                    {% if book.publication_date %}<tr><th>Publication Date</th><td>{{ book.publication_date|date:"F j, Y" }}</td></tr>{% endif %}
+                    {% if book.language %}<tr><th>Language</th><td>{{ book.language }}</td></tr>{% endif %}
+                    {% if book.pages %}<tr><th>Pages</th><td>{{ book.pages }}</td></tr>{% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <p>Sorry, the requested book could not be found.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/books.js' %}"></script> 
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Listener for the main borrow button on this page
+    const borrowButton = document.querySelector('.book-details-container .borrow-btn');
+    if (borrowButton && !borrowButton.disabled) {
+        borrowButton.addEventListener('click', function() {
+            const bookPK = this.dataset.bookPk;
+            if (typeof handleBorrowBook === 'function' && bookPK) {
+                handleBorrowBook(bookPK, this); 
+            } else {
+                console.error("handleBorrowBook (from books.js) not found or book PK missing.");
+            }
+        });
+    }
+
+    // Listener for the return button on this page
+    const returnButton = document.querySelector('.return-book-btn-detail');
+    if (returnButton) {
+        returnButton.addEventListener('click', function() {
+            const borrowedPk = this.dataset.borrowedPk;
+            if (borrowedPk) {
+                handleReturnBookFromDetailPage(borrowedPk); // Call specific handler below
+            }
+        });
+    }
+
+    // Listener for the delete button (admin only) on this page
+    const deleteButton = document.getElementById('delete-book-detail-btn');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', function() {
+            const bookPK = this.dataset.bookPk;
+            const bookTitle = this.dataset.bookTitle; 
+            if (confirm(`Are you sure you want to delete "${bookTitle}" (PK: ${bookPK})? This cannot be undone.`)) {
+                handleDeleteBookFromDetailPage(bookPK); // Call specific handler below
+            }
+        });
+    }
+});
+
+// Handles returning a book from the detail page.
+async function handleReturnBookFromDetailPage(borrowedPk) {
+    if (!window.APP_URLS?.returnBookApiBase) { 
+        alert("Configuration error: Return Book API URL not defined."); return; 
+    }
+    const returnUrl = `${window.APP_URLS.returnBookApiBase}${borrowedPk}/`;
+
+    try {
+        const response = await fetch(returnUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message || "Book returned successfully!");
+            window.location.reload(); // Reload to reflect updated state
+        } else {
+            alert(`Error: ${result.message || "Could not return book."}`);
+        }
+    } catch (error) { 
+        console.error("Error returning book from detail page:", error);
+        alert("A network error occurred while returning the book.");
+     }
+}
+
+// Handles deleting a book from the detail page.
+async function handleDeleteBookFromDetailPage(bookPK) {
+    if (!window.APP_URLS?.deleteBookApiBase) { 
+        alert("Configuration error: Delete Book API URL not defined."); return;
+    }
+    const deleteUrl = `${window.APP_URLS.deleteBookApiBase}${bookPK}/`;
+
+    try {
+        const response = await fetch(deleteUrl, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message || "Book deleted successfully.");
+            window.location.href = window.APP_URLS?.bookList || "{% url 'library:book_list' %}"; // Redirect
+        } else {
+            alert(`Error: ${result.message || "Could not delete book."}`);
+        }
+    } catch (error) { 
+        console.error("Error deleting book from detail page:", error);
+        alert("A network error occurred while deleting the book.");
+    }
+}
+</script>
+{% endblock %}

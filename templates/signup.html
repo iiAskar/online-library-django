@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign Up - Online Library{% endblock %}
+
+{% block content %}
+<main class="auth-container">
+    <div class="auth-form-container">
+        <h1>Create an Account</h1>
+        <form id="signup-form" class="auth-form" method="post"> 
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required minlength="3" maxlength="20">
+                <span class="error-message" id="username-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                <span class="error-message" id="email-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required minlength="8">
+                <span class="error-message" id="password-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required minlength="8">
+                <p class="error-message" id="confirm-password-error"></p>
+            </div>
+            
+            <div class="form-group">
+                <label>Account Type</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="is_admin" value="false" checked> Regular User
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="is_admin" value="true"> Admin
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn primary-btn">Sign Up</button>
+        </form>
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'library:login_page' %}" class="fixed-login-btn">Login here</a></p>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

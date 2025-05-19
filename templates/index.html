@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home - Online Library{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Welcome to our Online Library</h1>
+        <p>Your gateway to thousands of books, just a click away.</p>
+        <div class="hero-buttons">
+            {% if not user.is_authenticated %}
+            <a href="{% url 'library:signup_page' %}" class="btn primary-btn">Get Started</a>
+            {% endif %}
+            <a href="{% url 'library:book_list' %}" class="btn secondary-btn">Browse Books</a>
+        </div>
+    </div>
+    <div class="hero-image">
+        <img src="{% static 'images/library-hero.jpg' %}" alt="Library books">
+    </div>
+</section>
+
+<section class="featured-books">
+    <h2>Featured Books</h2>
+    <div class="book-carousel">
+        <div class="book-card">
+            <img src="{% static 'images/book5.jpg' %}" alt="The Hobbit cover" class="book-cover">
+            <div class="book-info">
+                <h3 class="book-title">The Hobbit</h3>
+                <p class="book-author">J.R.R. Tolkien</p>
+                <p class="book-category">Fantasy, Adventure</p>
+                <div class="book-actions">
+                    <a href="{% url 'library:book_detail' book_id='5' %}" class="btn details-btn">View Details</a> 
+                </div>
+            </div>
+        </div>
+        
+        <div class="book-card">
+            <img src="{% static 'images/book2.jpg' %}" alt="1984 cover" class="book-cover">
+            <div class="book-info">
+            <h3 class="book-title">1984</h3>
+            <p class="book-author">George Orwell</p>
+            <span class="book-category">Science Fiction</span>
+            <div class="book-actions">
+                <a href="{% url 'library:book_detail' book_id='2' %}" class="btn details-btn">View Details</a>
+            </div>
+            </div>
+        </div>
+        
+        <div class="book-card">
+            <img src="{% static 'images/book3.jpg' %}" alt="The Great Gatsby cover" class="book-cover">
+            <div class="book-info">
+            <h3 class="book-title">The Great Gatsby</h3>
+            <p class="book-author">F. Scott Fitzgerald</p>
+            <span class="book-category">Classics</span>
+            <div class="book-actions">
+                <a href="{% url 'library:book_detail' book_id='3' %}" class="btn details-btn">View Details</a> 
+            </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="carousel-controls">
+        <a href="{% url 'library:book_list' %}" class="btn view-all-btn">Browse All Books</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+{% endblock %}

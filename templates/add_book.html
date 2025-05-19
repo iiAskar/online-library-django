@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if is_editing and book_instance %}{{ book_instance.book_name }}{% else %}Add Book{% endif %} - Online Library{% endblock %}
+
+{% block content %}
+<div class="add-book-container">
+    <h1>{% if is_editing and book_instance %}Edit "{{ book_instance.book_name }}"{% else %}Add New Book{% endif %}</h1>
+    
+    <form id="add-book-form" class="book-form" method="post" enctype="multipart/form-data"> 
+        {% csrf_token %}
+
+        {% if is_editing and book_instance %}
+            <input type="hidden" id="editing_book_pk_holder_form_input" value="{{ book_instance.pk }}">
+        {% endif %}
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="book_id_json">Book ID</label> 
+                <input type="text" id="book_id_json" name="book_id_json" required 
+                       value="{% if is_editing and book_instance %}{{ form_for_template.book_id_json.value|default:book_instance.book_id_json|default:'' }}{% else %}{{ form_for_template.book_id_json.value|default:'' }}{% endif %}">
+                <span class="error-message" id="book_id_json-error">{{ form_for_template.book_id_json.errors|join:", " }}</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="book_name">Book Name</label>
+                <input type="text" id="book_name" name="book_name" required 
+                       value="{% if is_editing and book_instance %}{{ form_for_template.book_name.value|default:book_instance.book_name|default:'' }}{% else %}{{ form_for_template.book_name.value|default:'' }}{% endif %}">
+                <span class="error-message" id="book_name-error">{{ form_for_template.book_name.errors|join:", " }}</span>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="author">Author</label>
+                <input type="text" id="author" name="author" required 
+                       value="{% if is_editing and book_instance %}{{ form_for_template.author.value|default:book_instance.author|default:'' }}{% else %}{{ form_for_template.author.value|default:'' }}{% endif %}">
+                <span class="error-message" id="author-error">{{ form_for_template.author.errors|join:", " }}</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="total_copies">Total Copies</label>
+                <input type="number" id="total_copies" name="total_copies" min="0" 
+                       value="{% if is_editing and book_instance %}{{ form_for_template.total_copies.value|default:book_instance.total_copies|default:'1' }}{% else %}{{ form_for_template.total_copies.value|default:'1' }}{% endif %}" required>
+                <span class="error-message" id="total_copies-error">{{ form_for_template.total_copies.errors|join:", " }}</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Categories</label>
+            <div class="category-select-container">
+                <div class="category-dropdown">
+                    <div class="category-options">
+                        {% for category in categories_from_db %}
+                            <label><input type="checkbox" name="categories_checkbox" value="{{ category.name }}"
+                                {% if is_editing and category.name in selected_category_names %}checked{% endif %}> {{ category.name }}
+                            </label>
+                        {% empty %}
+                            <p>No categories available. Please add some via Django Admin.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="selected-categories">
+                    <span class="selected-categories-label">Selected Categories</span>
+                    <div class="selected-categories-list"></div>
+                </div>
+            </div>
+            <span class="error-message" id="categories-error">{{ form_for_template.categories.errors|join:", " }}</span>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="5" required>{% if is_editing and book_instance %}{{ form_for_template.description.value|default:book_instance.description|default:'' }}{% else %}{{ form_for_template.description.value|default:'' }}{% endif %}</textarea>
+            <span class="error-message" id="description-error">{{ form_for_template.description.errors|join:", " }}</span>
+        </div>
+
+        <div class="book-details-section">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="publisher">Publisher</label>
+                    <input type="text" id="publisher" name="publisher" 
+                           value="{% if is_editing and book_instance %}{{ form_for_template.publisher.value|default:book_instance.publisher|default:'' }}{% else %}{{ form_for_template.publisher.value|default:'' }}{% endif %}">
+                    <span class="error-message" id="publisher-error">{{ form_for_template.publisher.errors|join:", " }}</span>
+                </div>
+                <div class="form-group">
+                    <label for="publication_date">Publication Date</label>
+                    <input type="date" id="publication_date" name="publication_date" 
+                           value="{% if is_editing and book_instance %}{{ form_for_template.publication_date.value|default:book_instance.publication_date|date:'Y-m-d'|default:'' }}{% else %}{{ form_for_template.publication_date.value|default:'' }}{% endif %}">
+                    <span class="error-message" id="publication_date-error">{{ form_for_template.publication_date.errors|join:", " }}</span>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="language">Language</label>
+                    <select id="language" name="language" style="width: 200px; height: 45px; border-radius: var(--border-radius);">
+                        <option value="">Select a language</option>
+                        {% with current_lang_selected=form_for_template.language.value|default:'' %}
+                            <option value="English" {% if current_lang_selected == "English" %}selected{% endif %}>English</option>
+                            <option value="Arabic" {% if current_lang_selected == "Arabic" %}selected{% endif %}>Arabic</option>
+                            <option value="German" {% if current_lang_selected == "German" %}selected{% endif %}>German</option>
+                            <option value="Chinese" {% if current_lang_selected == "Chinese" %}selected{% endif %}>Chinese</option>
+                            <option value="Japanese" {% if current_lang_selected == "Japanese" %}selected{% endif %}>Japanese</option>
+                            <option value="Hindi" {% if current_lang_selected == "Hindi" %}selected{% endif %}>Hindi</option>
+                            <option value="Portuguese" {% if current_lang_selected == "Portuguese" %}selected{% endif %}>Portuguese</option>
+                            <option value="Spanish" {% if current_lang_selected == "Spanish" %}selected{% endif %}>Spanish</option>
+                            <option value="French" {% if current_lang_selected == "French" %}selected{% endif %}>French</option>
+                            <option value="Other" {% if current_lang_selected == "Other" %}selected{% endif %}>Other</option>
+                        {% endwith %}
+                    </select>
+                    <span class="error-message" id="language-error">{{ form_for_template.language.errors|join:", " }}</span>
+                </div>
+                <div class="form-group">
+                    <label for="pages">Pages</label>
+                    <input type="number" id="pages" name="pages" min="1" 
+                           value="{% if is_editing and book_instance %}{{ form_for_template.pages.value|default:book_instance.pages|default:'' }}{% else %}{{ form_for_template.pages.value|default:'' }}{% endif %}">
+                    <span class="error-message" id="pages-error">{{ form_for_template.pages.errors|join:", " }}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="isbn">ISBN</label>
+                <input type="text" id="isbn" name="isbn" 
+                       value="{% if is_editing and book_instance %}{{ form_for_template.isbn.value|default:book_instance.isbn|default:'' }}{% else %}{{ form_for_template.isbn.value|default:'' }}{% endif %}">
+                <span class="error-message" id="isbn-error">{{ form_for_template.isbn.errors|join:", " }}</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="cover_image_file">Cover Image</label>
+            {% if is_editing and book_instance.cover_image_file and book_instance.cover_image_file.url %}
+                <p>Current image: <a href="{{ book_instance.cover_image_file.url }}" target="_blank">
+                    <img src="{{ book_instance.cover_image_file.url }}" alt="Current cover" style="max-height: 100px; display: block; margin-bottom: 10px;">
+                    </a>
+                    {{ book_instance.cover_image_file.name|cut:"book_covers/" }}
+                </p>
+            {% endif %}
+            <input type="file" id="cover_image_file" name="cover_image_file" accept="image/*">
+            <span class="error-message" id="cover_image_file-error">{{ form_for_template.cover_image_file.errors|join:", " }}</span>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn primary-btn">{% if is_editing and book_instance %}Update Book{% else %}Add Book{% endif %}</button>
+            <a href="{% if is_editing and book_instance %}{% url 'library:book_detail' book_id=book_instance.book_id_json %}{% else %}{% url 'library:admin_dashboard' %}{% endif %}" class="btn secondary-btn">Cancel</a>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const IS_EDITING_MODE = {% if is_editing %}true{% else %}false{% endif %};
+    const BOOK_PK_TO_EDIT = {% if is_editing and book_instance and book_instance.pk is not None %}{{ book_instance.pk }}{% else %}null{% endif %};
+</script>
+<script src="{% static 'js/add-book.js' %}"></script>
+{% endblock %}
