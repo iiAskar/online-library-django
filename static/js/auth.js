@@ -129,9 +129,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Basic client-side validation
             let hasError = false;
             if (!username) {hasError = true; }
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {  hasError = true; }
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                 document.getElementById('email-error').textContent = 'Enter a valid email';
+                 hasError = true; }
             if (password.length < 8) { hasError = true; }
-            if (password !== confirmPassword) {  hasError = true; }
+            if (password !== confirmPassword) {  
+                document.getElementById('confirm-password-error').textContent ='Password must be match';
+                hasError = true; }
             if (hasError) return;
 
             const result = await handleSignup(username, email, password, isAdminStr);
